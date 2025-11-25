@@ -67,6 +67,35 @@ Modbus RTU silent interval between frames.
 
 ---
 
+## Queued async master (shared worker)
+
+`QueuedMaster` wraps a single async worker task and an MPSC queue so multiple async callers can share
+one serial link. The `buffer` argument is the channel depth; requests are buffered up to that limit
+and passing `0` will panic inside `tokio::sync::mpsc::channel`.
+
+```rust
+use std::time::Duration;
+use modbus_rtu::{Function, QueuedMaster, Request};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // buffer=4 means up to four queued requests before senders await.
+    let master = QueuedMaster::new_rs485("/dev/ttyUSB0", 38_400, 4).await?;
+
+    let func = Function::ReadInputRegisters { starting_address: 0x0001, quantity: 12 };
+    let req = Request::new(1, &func, Duration::from_millis(100));
+
+    let response = master.send(&req, 38_400).await?;
+    println!("response: {response:?}");
+    Ok(())
+}
+```
+
+You can clone the returned `Arc<QueuedMaster>` and call `send` from many tasks; the worker enforces
+Modbus idle timing between frames and switches baud rate per request if needed.
+
+---
+
 ## Opting out of the master to shrink binaries
 
 The synchronous and async masters (and their serial dependencies) are enabled by default. If you only

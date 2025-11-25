@@ -5,3 +5,8 @@ pub use sync::*;
 mod asynced;
 #[cfg(feature = "async")]
 pub use asynced::*;
+
+#[cfg(feature = "async")]
+mod queued;
+#[cfg(feature = "async")]
+pub use queued::*;
