@@ -1,16 +1,22 @@
 [package]
 name = "modbus-rtu"
-version = "1.1.0"
+version = "1.2.0"
 edition = "2024"
 authors = ["Park JiSoo <im@jababa.im>"]
 description = "Standard Modbus RTU protocols"
 license = "MIT"
 
 [features]
-default = ["master"]
+default = ["master", "async"]
 master = ["serialport"]
+async = ["tokio", "tokio-serial"]
 unlimited_packet_size = []
 enforce_broadcast = []
 
 [dependencies]
 serialport = { version = "4.8", optional = true }
+tokio = { version = "1.38", features = ["time", "io-util"], optional = true }
+tokio-serial = { version = "5.4", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.38", features = ["full"] }

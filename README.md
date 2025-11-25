@@ -35,17 +35,58 @@ flushes the TX buffer, reads until the slave stops talking, and automatically de
 
 ---
 
-## Opting out of the master to shrink binaries
+## Async master (Tokio)
 
-The synchronous master and its `serialport` dependency are enabled by default. If you only need the
-packet-building utilities, disable default features in your `Cargo.toml`:
+`AsyncMaster` ships enabled by default (feature `async`). You only need to wire up a Tokio runtime. Disable
+`async` in `Cargo.toml` if you prefer the smaller blocking-only build.
 
 ```toml
 [dependencies]
-modbus-rtu = { version = "1.1", default-features = false }
+modbus-rtu = "1.2"
+tokio = { version = "1.38", features = ["rt", "macros"] }
 ```
 
-You can always re-enable the high-level API with `features = ["master"]` when needed.
+```rust
+use modbus_rtu::{Function, AsyncMaster, Request};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut master = AsyncMaster::new_rs485("/dev/ttyUSB0", 19_200)?;
+
+    let func = Function::ReadHoldingRegisters { starting_address: 0x0000, quantity: 2 };
+    let request = Request::new(0x01, &func, std::time::Duration::from_millis(200));
+
+    let response = master.send(&request).await?;
+    println!("response: {response:?}");
+    Ok(())
+}
+```
+
+The async master mirrors the synchronous behavior but uses async sleeps and I/O to maintain the
+Modbus RTU silent interval between frames.
+
+---
+
+## Opting out of the master to shrink binaries
+
+The synchronous and async masters (and their serial dependencies) are enabled by default. If you only
+need the packet-building utilities, disable default features in your `Cargo.toml`:
+
+```toml
+[dependencies]
+modbus-rtu = { version = "1.2", default-features = false }
+```
+
+Then opt into what you need:
+
+- Blocking master only (drops Tokio/async deps):
+  ```toml
+  modbus-rtu = { version = "1.2", default-features = false, features = ["master"] }
+  ```
+- Both masters (default behavior):
+  ```toml
+  modbus-rtu = { version = "1.2", default-features = false, features = ["master", "async"] }
+  ```
 
 
 ---
@@ -113,3 +154,4 @@ match response {
     _ => unreachable!(),
 }
 ```
+If you disable default features, re-enable both `master` and `async` to access `AsyncMaster`.
