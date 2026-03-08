@@ -4,10 +4,8 @@ mod request_packet;
 pub use request_packet::*;
 
 mod response_packet;
-pub use response_packet::*;
-
 use crate::Exception;
-
+pub use response_packet::*;
 
 /// Error type that captures failures encountered when talking to a
 /// Modbus RTU device.
@@ -28,7 +26,6 @@ pub enum Error {
     IO(std::io::Error),
 }
 
-
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -39,6 +36,5 @@ impl core::fmt::Display for Error {
         }
     }
 }
-
 
 impl core::error::Error for Error {}
