@@ -58,7 +58,7 @@ impl Response {
         }
 
         // crc check
-        crate::crc::validate(&bytes)?;
+        crate::crc::validate(bytes)?;
 
         // exception check
         let function_code = bytes[1];
@@ -95,7 +95,7 @@ impl Response {
                     | crate::Function::ReadDiscreteInputs { quantity, .. } => *quantity,
                     _ => unreachable!(),
                 };
-                if byte_count < (quantity as u8 + 7) / 8 {
+                if byte_count < (quantity as u8).div_ceil(8) {
                     return Err(crate::error::ResponsePacketError::InvalidFormat);
                 }
                 if packet.len() < byte_count as usize + 1 {
@@ -141,7 +141,7 @@ impl Response {
                 }
                 let (req_address, req_value) = match request.function() {
                     crate::Function::WriteSingleCoil { address, value } => {
-                        (*address, if *value == true { 0xFF00 } else { 0x0000 })
+                        (*address, if *value { 0xFF00 } else { 0x0000 })
                     }
                     crate::Function::WriteSingleRegister { address, value } => (*address, *value),
                     _ => unreachable!(),

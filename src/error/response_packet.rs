@@ -29,7 +29,7 @@ impl core::fmt::Display for ResponsePacketError {
                 ),
                 Self::UnexpectedResponder(id) =>
                     format!("response came from unexpected Modbus slave id 0x{id:02X}."),
-                Self::InvalidFormat => format!("response payload format is invalid."),
+                Self::InvalidFormat => "response payload format is invalid.".to_string(),
             }
         )
     }

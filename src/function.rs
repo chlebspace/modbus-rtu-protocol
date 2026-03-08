@@ -144,7 +144,7 @@ impl Function {
             }
             Function::WriteSingleCoil { address, value } => {
                 buf.extend_from_slice(&address.to_be_bytes());
-                buf.push(if *value == true { 0xFF } else { 0x00 });
+                buf.push(if *value { 0xFF } else { 0x00 });
                 buf.push(0x00);
             }
             Function::WriteSingleRegister { address, value } => {
@@ -162,15 +162,14 @@ impl Function {
                         return Err(crate::error::RequestPacketError::RequestTooBig);
                     }
                 }
-                let byte_count = ((quantity + 7) / 8) as u8;
+                let byte_count = quantity.div_ceil(8) as u8;
                 buf.extend_from_slice(&starting_address.to_be_bytes());
                 buf.extend_from_slice(&quantity.to_be_bytes());
                 buf.push(byte_count);
-                let mut chunks = value.chunks(8);
-                while let Some(chunk) = chunks.next() {
+                for chunk in value.chunks(8) {
                     let mut byte: u8 = 0x00;
                     for (i, value) in chunk.iter().enumerate() {
-                        if *value == true {
+                        if *value {
                             byte |= 0b1 << i;
                         } else {
                             byte &= !(0b1 << i);
@@ -215,17 +214,17 @@ impl Function {
     /// let func = Function::ReadHoldingRegisters { starting_address: 0, quantity: 2 };
     /// assert_eq!(func.expected_len(), 5 + (2 * 2));
     /// ```
-    /// 
+    ///
     pub const fn expected_len(&self) -> usize {
         match self {
-            Function::ReadCoils { quantity, .. } |
-            Function::ReadDiscreteInputs { quantity, .. } => 5 + ((*quantity as usize + 7) / 8),
-            Function::ReadHoldingRegisters { quantity, .. } |
-            Function::ReadInputRegisters { quantity, .. } => 5 + (*quantity as usize * 2),
-            Function::WriteSingleCoil { .. } |
-            Function::WriteSingleRegister { .. } |
-            Function::WriteMultipleCoils { .. } |
-            Function::WriteMultipleRegisters { .. } => 8,
+            Function::ReadCoils { quantity, .. }
+            | Function::ReadDiscreteInputs { quantity, .. } => 5 + (*quantity as usize).div_ceil(8),
+            Function::ReadHoldingRegisters { quantity, .. }
+            | Function::ReadInputRegisters { quantity, .. } => 5 + (*quantity as usize * 2),
+            Function::WriteSingleCoil { .. }
+            | Function::WriteSingleRegister { .. }
+            | Function::WriteMultipleCoils { .. }
+            | Function::WriteMultipleRegisters { .. } => 8,
         }
     }
 }
