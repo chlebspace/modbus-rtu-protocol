@@ -40,19 +40,6 @@ pub enum RequestPacketError {
 
     /// This error occurs when attempting to broadcast a function that does not
     /// support broadcasting (e.g., 0x01, 0x03).
-    ///
-    /// ---
-    ///
-    /// If you intentionally need to broadcast such functions, enable the Cargo
-    /// feature as shown below.
-    ///
-    /// ## Warning: packets produced with this feature enabled may fail during communication.
-    ///
-    /// ```ignore
-    /// [dependencies]
-    /// modbus-rtu = { version = "1.0", features = ["enforce_broadcast"] }
-    /// ```
-    ///
     CannotBroadcast,
 }
 
